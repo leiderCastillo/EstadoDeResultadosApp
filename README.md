@@ -7,6 +7,6 @@ Esta aplicación está diseñada para ayudarte a generar estados de resultados p
 
 👨‍💻 Este repositorio también cuenta con el código fuente para que puedas personalizar la aplicación según tus necesidades 💫
 
-|     |     |     |
+
+|  ![Imagen 3](ReadmeFiles/3.jpeg)| ![Imagen 2](ReadmeFiles/2.jpeg) | ![Imagen 1](ReadmeFiles/1.jpeg) |
 | --- | --- | --- |
-| ![Imagen 1](ReadmeFiles/1.jpeg) | ![Imagen 2](ReadmeFiles/2.jpeg) | ![Imagen 3](ReadmeFiles/3.jpeg) |
