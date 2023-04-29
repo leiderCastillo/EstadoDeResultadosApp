@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:contaduria/estructuras.dart';
 import 'package:contaduria/funciones.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 void main() {
@@ -28,29 +27,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  late bool cargando;
-  late String pdfFilePath;
 
   void esconderTeclado(){
-    FocusScope.of(context).requestFocus(new FocusNode());
+    FocusScope.of(context).requestFocus(FocusNode());
   }
 
   @override
   void initState() {
-    controllerFecha.text = DateTime.now().toString().substring(0, 11);
+    controllerFechaDesde.text = DateTime(2021).toString().substring(0, 11);
+    controllerFechaHasta.text = DateTime.now().toString().substring(0, 11);
     super.initState();
-    cargando = true;
-    cargar();
   }
 
   Widget getPagina() {
     if (paginaSeleccionada <= 1) {
+      setState(() {mostrarBotonHistory = true;});
       return datos();
     }
     if (paginaSeleccionada >= interfaces.length) {
       generarPdf();
+      setState(() {mostrarBotonHistory = true;});
       return compartir();
     } else {
+      setState(() {mostrarBotonHistory = false;});
       return moduloPrincipal(paginaSeleccionada - 1);
     }
   }
@@ -90,25 +89,77 @@ class _HomeState extends State<Home> {
     setState(() {});
   }
 
-  Future<void> cargar() async {
-    final Directory appDocDirectory = await getApplicationDocumentsDirectory();
-    pdfFilePath = '${appDocDirectory.path}/EstadoDeResultados.pdf';
-    setState(() {
-      cargando = false;
-    });
+  void mostrarHistory()async{
+    await consultaHistorial();
+    setState(() {});
+    // ignore: use_build_context_synchronously
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: ((context) {
+          return Scaffold(
+            appBar: AppBar(title: const Text("History"),),
+            body: 
+              ListView.builder(
+                itemCount: listaDocumentos.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(listaDocumentos[index]),
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return SfPdfViewer.file(
+                              File("$filePathRaiz/${listaDocumentos[index]}")
+                            );
+                          },
+                        )
+                      );
+                    },
+                  );
+                },
+              )
+          );
+        }
+        )
+      )
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     ancho = MediaQuery.of(context).size.width;
     alto = MediaQuery.of(context).size.height;
-    return Column(
+    return 
+    Stack(
       children: [
-        progress(),
-        Expanded(
-          child: getPagina(),
+        Column(
+          children: [
+            progress(),
+            Expanded(child: getPagina(),),
+            botones()
+          ],
         ),
-        botones()
+        AnimatedPositioned(
+          top: 40,
+          right: mostrarBotonHistory ? -10: -100,
+          duration: const Duration(milliseconds: 300),
+          curve:Curves.easeInOutBack,
+          child:
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                fixedSize:const Size(80,50),
+                elevation: 0,
+                shape:const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.horizontal(left: Radius.circular(20))
+                )
+              ),
+              onPressed: (){mostrarHistory();},
+              child: const Icon(Icons.history_rounded)
+            )
+        )
+        
       ],
     );
   }
@@ -117,14 +168,12 @@ class _HomeState extends State<Home> {
     return Stack(
           children: [
             SizedBox.expand(
-              child: cargando
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : SfPdfViewer.file(
+              child: 
+              SfPdfViewer.file(
                   initialScrollOffset: const Offset(50,0),
                   initialZoomLevel: 1.3,
-                  File(pdfFilePath)),
+                  File(filePath)
+              ),
             ),
             const Positioned(
                 bottom: 10,
@@ -138,7 +187,21 @@ class _HomeState extends State<Home> {
   }
 
   Widget datos() {
-    void calendario() async {
+    void calendarioDesde() async {
+      DateTime? pickedDate = await showDatePicker(
+          context: context,
+          initialDate: DateTime(2021),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2101));
+      if (pickedDate != null) {
+        setState(() {
+          controllerFechaDesde.text = pickedDate.toString().substring(0, 11);
+        });
+      } else {
+        print("fecha no elegida");
+      }
+    }
+    void calendarioHasta() async {
       DateTime? pickedDate = await showDatePicker(
           context: context,
           initialDate: DateTime.now(),
@@ -146,7 +209,7 @@ class _HomeState extends State<Home> {
           lastDate: DateTime(2101));
       if (pickedDate != null) {
         setState(() {
-          controllerFecha.text = pickedDate.toString().substring(0, 11);
+          controllerFechaHasta.text = pickedDate.toString().substring(0, 11);
         });
       } else {
         print("fecha no elegida");
@@ -205,14 +268,30 @@ class _HomeState extends State<Home> {
             ),
             TextField(
               readOnly: true,
-              controller: controllerFecha,
+              controller: controllerFechaDesde,
               enabled: true,
               keyboardType: TextInputType.datetime,
               onTap: () async {
-                calendario();
+                calendarioDesde();
               },
               decoration: const InputDecoration(
-                  label: Text("Fecha del Informe"),
+                  label: Text("Fecha del Informe Desde"),
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_month)),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            TextField(
+              readOnly: true,
+              controller: controllerFechaHasta,
+              enabled: true,
+              keyboardType: TextInputType.datetime,
+              onTap: () async {
+                calendarioHasta();
+              },
+              decoration: const InputDecoration(
+                  label: Text("Fecha del Informe Hasta"),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.calendar_month)),
             ),
@@ -528,6 +607,9 @@ class _HomeState extends State<Home> {
           if (!fin)
             ElevatedButton(
               onPressed: () {
+                if(paginaSeleccionada ==1){
+                  crearArchivo();
+                }
                 esconderTeclado();
                 cambiarPagina(1);
               },

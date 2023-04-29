@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 bool animacionBoton = false;
 int animacionBotonInterfas = 0;
 int animacionBotonCard = 0;
-
+bool mostrarBotonHistory = true;
 double ancho = 0;
 double alto  = 0;
 double altoCardList = 55;
@@ -15,7 +15,8 @@ bool animacionProgress = false;
 int paginaSeleccionada = 1;
 int dropSeleccionado = 0;
 TextEditingController controllerValor = TextEditingController();
-TextEditingController controllerFecha = TextEditingController();
+TextEditingController controllerFechaDesde = TextEditingController();
+TextEditingController controllerFechaHasta = TextEditingController();
 TextEditingController controllerEmpresa = TextEditingController();
 TextEditingController controllerNit = TextEditingController();
 TextEditingController controllerElaboro = TextEditingController();

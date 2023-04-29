@@ -8,7 +8,22 @@ import 'package:pdf/widgets.dart';
 
 double sizeText = 15;
 double sizeTitulo = 12;
+String filePathRaiz = "";
 String filePath = "";
+List<String> listaDocumentos = [];
+
+Future<void> consultaHistorial() async{
+  listaDocumentos.clear();
+  final Directory appDocDirectory = await getApplicationDocumentsDirectory();
+  filePathRaiz = appDocDirectory.path;
+  final directory = Directory(appDocDirectory.path);
+  final files = await directory.list().where((file) => file.path.endsWith('.pdf')).toList();
+
+  for (final file in files) {
+    final fileName = file.path.split('/').last;
+    listaDocumentos.add(fileName);
+  }
+}
 
 Future<void> compartirPdf() async {
   final MailOptions mailOptions = MailOptions(
@@ -255,7 +270,7 @@ Future<void> generarPdf() async {
               pdfLib.Center(
                 child: pdfLib.Text(
                   textAlign: TextAlign.center,
-                  'ESTADO DE RESULTADOS DE ENERO 1 A DICIEMBRE 31 DE 20XX',
+                  'ESTADO DE RESULTADOS DE ${controllerFechaDesde.text} A ${controllerFechaHasta.text}',
                   style: pdfLib.TextStyle(
                     fontSize: sizeTitulo,
                     fontWeight: pdfLib.FontWeight.bold,
@@ -284,9 +299,26 @@ Future<void> generarPdf() async {
       }));
 
   // Escribir el archivo de PDF en disco
+  
+  final pdfFile = File(filePath);
+  //Guardarlo
+  await pdfFile.writeAsBytes(await pdf.save());
+}
+
+
+Future<void> crearArchivo() async{
+  // Escribir el archivo de PDF en disco
   final Directory appDocDirectory = await getApplicationDocumentsDirectory();
-  final String pdfFilePath = '${appDocDirectory.path}/EstadoDeResultados.pdf';
+
+  final pdf = pdfLib.Document();
+
+  final String pdfFilePath = '${appDocDirectory.path}/${controllerFechaDesde.text.trim()} - ${controllerFechaHasta.text.trim()}.pdf';
   filePath = pdfFilePath;
   final pdfFile = File(pdfFilePath);
+  final listaArchivos = await Directory(appDocDirectory.path).list().toList();
+  for (var element in listaArchivos) {
+      print(element);
+  }
   await pdfFile.writeAsBytes(await pdf.save());
+  print("SE GENERO UN ARCHIVO CON ESTE NOMBRE $pdfFilePath");
 }
